@@ -19,7 +19,7 @@ final class Routepress
     /**
      * Routepress constructor.
      * Use dependency injection to inject your auth class/strategy
-     * @param \rdelbem\Routepress\AuthInterface $authInterface
+     * @param \Rdelbem\Routepress\AuthInterface $authInterface
      */
     function __construct(AuthInterface $authInterface, string $apiNamespace)
     {
