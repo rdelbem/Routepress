@@ -14,3 +14,7 @@ modules:
       domain: 'http://localhost'
       adminEmail: 'admin@local.test'
       title: 'Test Site'
+extensions:
+  config:
+    lucatume\WPBrowser\Extension\ChromeDriverController:
+      path: '/usr/bin/chromedriver'
