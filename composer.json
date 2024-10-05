@@ -33,5 +33,6 @@
     },
     "require": {
         "humanmade/psalm-plugin-wordpress": "^3.1"
-    }
+    },
+    "license": "GPL-3.0-or-later"
 }
