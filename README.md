@@ -1,7 +1,7 @@
 Routepress
 ==========
 
-[![Build Status](https://github.com/yourusername/routepress/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/routepress/actions)
+[![Build Status](https://github.com/rdelbem/routepress/actions/workflows/ci.yml/badge.svg)](https://github.com/rdelbem/routepress/actions)
 
 A PHP library to simplify the creation and management of WordPress REST API routes.
 
