@@ -31,6 +31,9 @@ jobs:
       - name: Copy wp-config.php into the WordPress directory
         run: docker compose exec php cp /var/www/html/wp-config.php /var/www/html/wordpress/wp-config.php
 
+      - name: Copy chromedriver into the vendor directory
+        run: docker compose exec php cp /usr/bin/chromedriver /var/www/html/vendor/bin/chromedriver
+
       - name: Install WordPress inside PHP container
         run: |
           docker compose exec php wp core install \
