@@ -1,0 +1,16 @@
+actor: WpunitTester
+modules:
+  enabled:
+    - WPLoader
+  config:
+    WPLoader:
+      wpRootFolder: '/var/www/html/wordpress'
+      wpConfigFile: '/var/www/html/wordpress/wp-config.php'
+      dbName: 'wp_test'
+      dbHost: 'db' # Matches the service name in docker-compose.yml
+      dbUser: 'root'
+      dbPassword: 'root'
+      tablePrefix: 'wp_'
+      domain: 'http://localhost'
+      adminEmail: 'admin@local.test'
+      title: 'Test Site'

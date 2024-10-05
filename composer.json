@@ -1,0 +1,33 @@
+{
+    "name": "rdelbem/routepress",
+    "description": "A WordPress lib to create APIs easily",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "rdelbem\\Routepress\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "rdelbem",
+            "email": "rodrigodelbem@gmail.com"
+        }
+    ],
+    "require-dev": {
+        "10up/wp_mock": "^1.0",
+        "php-stubs/wordpress-stubs": "^6.6",
+        "codeception/codeception": "^5.1",
+        "codeception/module-phpbrowser": "*",
+        "codeception/module-asserts": "*",
+        "lucatume/wp-browser": "^4.3",
+        "johnpbloch/wordpress": "^6.6"
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit --colors=always --bootstrap ./tests/bootstrap.php ./tests/RoutepressTest.php"
+    },
+    "config": {
+        "allow-plugins": {
+            "johnpbloch/wordpress-core-installer": true
+        }
+    }
+}
