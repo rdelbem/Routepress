@@ -28,6 +28,9 @@ jobs:
         run: |
           docker compose exec php composer install --prefer-dist --no-interaction
 
+      - name: Copy wp-config.php into the WordPress directory
+        run: docker compose exec php cp /var/www/html/wp-config.php /var/www/html/wordpress/wp-config.php
+
       - name: Install WordPress inside PHP container
         run: |
           docker compose exec php wp core install \

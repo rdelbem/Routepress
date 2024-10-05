@@ -1,3 +1,2 @@
-/wordpress/*
+/wordpress/
 /vendor
-!/wordpress/wp-config.php
