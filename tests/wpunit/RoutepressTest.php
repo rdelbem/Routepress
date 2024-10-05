@@ -1,8 +1,8 @@
 <?php
 
 use Codeception\TestCase\WPTestCase;
-use rdelbem\Routepress\Routepress;
-use rdelbem\Routepress\AuthInterface;
+use Rdelbem\Routepress\Routepress;
+use Rdelbem\Routepress\AuthInterface;
 
 class RoutepressTest extends WPTestCase
 {

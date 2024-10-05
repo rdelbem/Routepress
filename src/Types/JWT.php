@@ -1,6 +1,6 @@
 <?php
 
-namespace rdelbem\Routepress\Types;
+namespace Rdelbem\Routepress\Types;
 
 final class JWT {
     public string $iat;

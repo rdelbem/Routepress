@@ -1,7 +1,7 @@
 <?php
 
-namespace rdelbem\Routepress;
-use rdelbem\Routepress\AuthInterface;
+namespace Rdelbem\Routepress;
+use Rdelbem\Routepress\AuthInterface;
 
 use \WP_REST_Server;
 use \WP_REST_Request;

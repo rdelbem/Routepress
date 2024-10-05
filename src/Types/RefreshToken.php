@@ -1,6 +1,6 @@
 <?php
 
-namespace rdelbem\Routepress\Types;
+namespace Rdelbem\Routepress\Types;
 
 final class RefreshToken{
     public string $refresh_token;

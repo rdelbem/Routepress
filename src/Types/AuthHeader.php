@@ -1,9 +1,9 @@
 <?php 
 
-namespace rdelbem\Types\Routepress;
+namespace Rdelbem\Types\Routepress;
 
-use rdelbem\Routepress\Types\JWT;
-use rdelbem\Routepress\Types\RefreshToken;
+use Rdelbem\Routepress\Types\JWT;
+use Rdelbem\Routepress\Types\RefreshToken;
 
 final class AuthHeader{
     public JWT $jwt;

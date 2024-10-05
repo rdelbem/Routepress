@@ -4,7 +4,7 @@
     "type": "library",
     "autoload": {
         "psr-4": {
-            "rdelbem\\Routepress\\": "src/"
+            "Rdelbem\\Routepress\\": "src/"
         }
     },
     "authors": [
@@ -20,7 +20,8 @@
         "codeception/module-phpbrowser": "*",
         "codeception/module-asserts": "*",
         "lucatume/wp-browser": "^4.3",
-        "johnpbloch/wordpress": "^6.6"
+        "johnpbloch/wordpress": "^6.6",
+        "vimeo/psalm": "5.26.1"
     },
     "scripts": {
         "test": "./vendor/bin/phpunit --colors=always --bootstrap ./tests/bootstrap.php ./tests/RoutepressTest.php"
@@ -29,5 +30,8 @@
         "allow-plugins": {
             "johnpbloch/wordpress-core-installer": true
         }
+    },
+    "require": {
+        "humanmade/psalm-plugin-wordpress": "^3.1"
     }
 }
