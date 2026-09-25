@@ -1,19 +1,28 @@
 <?php
 
-namespace Rdelbem\Routepress\Types;
+declare(strict_types=1);
 
-final class RefreshToken{
-    public string $refresh_token;
-    public string $exp;
-    public function __construct(string $refresh_token, string $exp) {
-        $this->exp = $exp;
-        $this->refresh_token = $refresh_token;
+namespace Routepress\Types;
+
+use JsonSerializable;
+
+final readonly class RefreshToken implements JsonSerializable
+{
+    public function __construct(
+        public string $token,
+        public int $exp,
+    ) {
     }
 
-    public function toArray(): array {
+    /**
+     * @return array{refresh_token: string, exp: int}
+     */
+    #[\Override]
+    public function jsonSerialize(): array
+    {
         return [
-            'refresh_token' => $this->refresh_token,
-            'exp' => $this->exp
+            'refresh_token' => $this->token,
+            'exp' => $this->exp,
         ];
     }
 }

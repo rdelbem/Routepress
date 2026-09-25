@@ -1,0 +1,9 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+    typeAliases:
+        RouteRegistrar: 'Closure(Routepress\Types\HttpVerb|string|array<Routepress\Types\HttpVerb|string>, string, callable, bool, ?callable, list<callable>, array<string, array<string, mixed>>): void'

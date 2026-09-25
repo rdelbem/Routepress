@@ -1,26 +1,32 @@
 <?php
 
-namespace Rdelbem\Routepress\Types;
+declare(strict_types=1);
 
-final class JWT {
-    public string $iat;
-    public string $iss;
-    public string $exp;
-    public string $uid;
+namespace Routepress\Types;
 
-    public function __construct(string $iat, string $iss, string $exp, string $uid) {
-        $this->exp = $exp;
-        $this->iat = $iat;
-        $this->iss = $iss;
-        $this->uid = $uid;
+use JsonSerializable;
+
+final readonly class JWT implements JsonSerializable
+{
+    public function __construct(
+        public int $iat,
+        public string $iss,
+        public int $exp,
+        public string $uid,
+    ) {
     }
 
-    public function toArray(): array {
+    /**
+     * @return array{iat: int, iss: string, exp: int, uid: string}
+     */
+    #[\Override]
+    public function jsonSerialize(): array
+    {
         return [
             'iat' => $this->iat,
             'iss' => $this->iss,
             'exp' => $this->exp,
-            'uid' => $this->uid
+            'uid' => $this->uid,
         ];
     }
 }
