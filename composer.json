@@ -2,10 +2,37 @@
     "name": "rdelbem/routepress",
     "description": "A WordPress lib to create APIs easily",
     "type": "library",
+    "license": "GPL-3.0-or-later",
+    "keywords": [
+        "wordpress",
+        "rest",
+        "api",
+        "router",
+        "jwt"
+    ],
+    "require": {
+        "php": ">=8.2"
+    },
+    "require-dev": {
+        "brain/monkey": "^2.7",
+        "phpunit/phpunit": "^11.5",
+        "php-stubs/wordpress-stubs": "^6.6",
+        "phpstan/phpstan": "^2.0",
+        "squizlabs/php_codesniffer": "^4.0",
+        "szepeviktor/phpstan-wordpress": "^2.0"
+    },
     "autoload": {
         "psr-4": {
-            "Rdelbem\\Routepress\\": "src/"
+            "Routepress\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Routepress\\Tests\\": "tests/"
+        },
+        "exclude-from-classmap": [
+            "/tests/bootstrap.php"
+        ]
     },
     "authors": [
         {
@@ -13,26 +40,20 @@
             "email": "rodrigodelbem@gmail.com"
         }
     ],
-    "require-dev": {
-        "10up/wp_mock": "^1.0",
-        "php-stubs/wordpress-stubs": "^6.6",
-        "codeception/codeception": "^5.1",
-        "codeception/module-phpbrowser": "*",
-        "codeception/module-asserts": "*",
-        "lucatume/wp-browser": "^4.3",
-        "johnpbloch/wordpress": "^6.6",
-        "vimeo/psalm": "5.26.1"
-    },
     "scripts": {
-        "test": "./vendor/bin/phpunit --colors=always --bootstrap ./tests/bootstrap.php ./tests/RoutepressTest.php"
+        "test": "vendor/bin/phpunit",
+        "phpstan": "vendor/bin/phpstan analyse",
+        "lint": "vendor/bin/phpcs",
+        "format": "vendor/bin/phpcbf",
+        "hooks": "@php bin/install-hooks.php"
     },
+    "post-install-cmd": [
+        "@hooks"
+    ],
+    "post-update-cmd": [
+        "@hooks"
+    ],
     "config": {
-        "allow-plugins": {
-            "johnpbloch/wordpress-core-installer": true
-        }
-    },
-    "require": {
-        "humanmade/psalm-plugin-wordpress": "^3.1"
-    },
-    "license": "GPL-3.0-or-later"
+        "sort-packages": true
+    }
 }

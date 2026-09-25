@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+
+# Routepress pre-commit hook: coding standards + tests.
+# Install/refresh with: composer hooks
+
+echo "pre-commit: coding standards (composer lint)"
+if ! composer lint; then
+    echo ""
+    echo "ERROR: Coding standard violations found."
+    echo "Run 'composer format' to fix them automatically, then stage and commit again."
+    exit 1
+fi
+
+echo "pre-commit: test suite (composer test)"
+if ! composer test; then
+    echo ""
+    echo "ERROR: Tests failed. Fix them, then stage and commit again."
+    exit 1
+fi
+
+echo "pre-commit: all checks passed."

@@ -1,16 +1,31 @@
-<?php 
+<?php
 
-namespace Rdelbem\Types\Routepress;
+declare(strict_types=1);
 
-use Rdelbem\Routepress\Types\JWT;
-use Rdelbem\Routepress\Types\RefreshToken;
+namespace Routepress\Types;
 
-final class AuthHeader{
-    public JWT $jwt;
-    public RefreshToken $refreshToken;
+use JsonSerializable;
 
-    public function __construct(JWT $jwt, RefreshToken $refreshToken) {
-        $this->jwt = $jwt;
-        $this->refreshToken = $refreshToken;
+final readonly class AuthHeader implements JsonSerializable
+{
+    public function __construct(
+        public JWT $jwt,
+        public RefreshToken $refreshToken,
+    ) {
+    }
+
+    /**
+     * @return array{
+     *     jwt: array{iat: int, iss: string, exp: int, uid: string},
+     *     refresh_token: array{refresh_token: string, exp: int}
+     * }
+     */
+    #[\Override]
+    public function jsonSerialize(): array
+    {
+        return [
+            'jwt' => $this->jwt->jsonSerialize(),
+            'refresh_token' => $this->refreshToken->jsonSerialize(),
+        ];
     }
 }
