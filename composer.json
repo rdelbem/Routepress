@@ -1,7 +1,6 @@
 {
     "name": "rdelbem/routepress",
     "description": "A WordPress lib to create APIs easily",
-    "version": "2.0.0",
     "type": "library",
     "license": "GPL-3.0-or-later",
     "keywords": [
