@@ -6,7 +6,10 @@ namespace Routepress;
 
 use InvalidArgumentException;
 use LogicException;
+use Routepress\Cli\CommandRegistrar;
+use Routepress\Cli\RouteRegistry;
 use Routepress\Types\HttpVerb;
+use Routepress\Types\RouteDefinition;
 use WP_Error;
 use WP_REST_Request;
 use WP_User;
@@ -17,7 +20,7 @@ use WP_User;
  */
 final class Bootload
 {
-    /** @var list<array{methods: list<string>, route: non-falsy-string, callback: callable, permission: callable, args: array<string, array<string, mixed>>}> */
+    /** @var list<array{methods: list<string>, route: non-falsy-string, callback: callable, permission: callable, requiresAuth: bool, hasMiddleware: bool, args: array<string, array<string, mixed>>}> */
     private array $routes = [];
 
     private bool $registrationHooked = false;
@@ -32,6 +35,8 @@ final class Bootload
         private readonly ?JwtAuthenticator $authenticator,
         private readonly string $apiNamespace,
     ) {
+        RouteRegistry::register(fn (): array => $this->definitions());
+        CommandRegistrar::register();
     }
 
     /**
@@ -167,10 +172,32 @@ final class Bootload
             'route' => $route,
             'callback' => $callback,
             'permission' => $permission,
+            'requiresAuth' => $requiresAuth,
+            'hasMiddleware' => $middleware !== [],
             'args' => $args,
         ];
 
         $this->hookRegistration();
+    }
+
+    /**
+     * Describe every registered route for introspection.
+     *
+     * @return list<RouteDefinition>
+     */
+    private function definitions(): array
+    {
+        return array_map(
+            fn (array $route): RouteDefinition => new RouteDefinition(
+                $this->apiNamespace,
+                $route['methods'],
+                $route['route'],
+                $route['requiresAuth'],
+                $route['hasMiddleware'],
+                $route['args'],
+            ),
+            $this->routes
+        );
     }
 
     /**

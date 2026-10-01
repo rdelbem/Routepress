@@ -1,6 +1,7 @@
 {
     "name": "rdelbem/routepress",
     "description": "A WordPress lib to create APIs easily",
+    "version": "2.0.0",
     "type": "library",
     "license": "GPL-3.0-or-later",
     "keywords": [
@@ -15,9 +16,11 @@
     },
     "require-dev": {
         "brain/monkey": "^2.7",
-        "phpunit/phpunit": "^11.5",
+        "infection/infection": "^0.32",
         "php-stubs/wordpress-stubs": "^6.6",
+        "php-stubs/wp-cli-stubs": "^2.10",
         "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^11.5",
         "squizlabs/php_codesniffer": "^4.0",
         "szepeviktor/phpstan-wordpress": "^2.0"
     },
@@ -31,7 +34,8 @@
             "Routepress\\Tests\\": "tests/"
         },
         "exclude-from-classmap": [
-            "/tests/bootstrap.php"
+            "/tests/bootstrap.php",
+            "/tests/Cli/fixtures/"
         ]
     },
     "authors": [
@@ -42,18 +46,27 @@
     ],
     "scripts": {
         "test": "vendor/bin/phpunit",
+        "coverage": "vendor/bin/phpunit --coverage-text",
+        "coverage:check": [
+            "vendor/bin/phpunit --coverage-clover=build/coverage/clover.xml",
+            "@php bin/check-coverage.php build/coverage/clover.xml"
+        ],
+        "infection": "vendor/bin/infection --threads=max",
         "phpstan": "vendor/bin/phpstan analyse",
         "lint": "vendor/bin/phpcs",
         "format": "vendor/bin/phpcbf",
-        "hooks": "@php bin/install-hooks.php"
+        "hooks": "@php bin/install-hooks.php",
+        "post-install-cmd": [
+            "@hooks"
+        ],
+        "post-update-cmd": [
+            "@hooks"
+        ]
     },
-    "post-install-cmd": [
-        "@hooks"
-    ],
-    "post-update-cmd": [
-        "@hooks"
-    ],
     "config": {
+        "allow-plugins": {
+            "infection/extension-installer": true
+        },
         "sort-packages": true
     }
 }

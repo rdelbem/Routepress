@@ -22,7 +22,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          coverage: none
+          coverage: pcov
 
       - name: Validate composer.json
         run: composer validate --no-check-publish
@@ -33,6 +33,10 @@ jobs:
       - name: Run tests
         run: composer test
 
+      - name: Check coverage
+        if: matrix.php == '8.3'
+        run: composer coverage:check
+
       - name: Run PHPStan
         if: matrix.php == '8.3'
         run: composer phpstan
@@ -40,3 +44,7 @@ jobs:
       - name: Run PHPCS
         if: matrix.php == '8.3'
         run: composer lint
+
+      - name: Run mutation testing
+        if: matrix.php == '8.3'
+        run: composer infection

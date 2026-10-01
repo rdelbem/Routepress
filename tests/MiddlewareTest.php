@@ -124,4 +124,59 @@ final class MiddlewareTest extends TestCase
         self::assertSame($error, $chain(new WP_REST_Request()));
         self::assertFalse($called);
     }
+
+    public function testLoggedInReturnsFalseWhenNotLoggedIn(): void
+    {
+        Functions\expect('is_user_logged_in')->once()->andReturn(false);
+
+        self::assertFalse((Middleware::loggedIn())());
+    }
+
+    public function testCapabilityReturnsFalseWhenTheCapabilityIsMissing(): void
+    {
+        Functions\expect('current_user_can')->once()->with('edit_posts')->andReturn(false);
+
+        self::assertFalse((Middleware::capability('edit_posts'))());
+    }
+
+    public function testAnyCapabilityRejectsAnEmptyList(): void
+    {
+        self::assertFalse((Middleware::anyCapability())());
+    }
+
+    public function testChainReturnsTrueWhenEveryMiddlewarePasses(): void
+    {
+        $called = 0;
+
+        $chain = Middleware::chain([
+            static function () use (&$called): bool {
+                $called++;
+
+                return true;
+            },
+            static function () use (&$called): bool {
+                $called++;
+
+                return true;
+            },
+        ]);
+
+        self::assertNotNull($chain);
+        self::assertTrue($chain(new WP_REST_Request()));
+        self::assertSame(2, $called);
+    }
+
+    public function testAllCapabilitiesStopsAtTheFirstMissingCapability(): void
+    {
+        $checked = [];
+
+        Functions\when('current_user_can')->alias(static function (string $capability) use (&$checked): bool {
+            $checked[] = $capability;
+
+            return $capability === 'a';
+        });
+
+        self::assertFalse((Middleware::allCapabilities('a', 'b', 'c'))());
+        self::assertSame(['a', 'b'], $checked);
+    }
 }

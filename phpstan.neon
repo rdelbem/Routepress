@@ -5,5 +5,8 @@ parameters:
     level: 8
     paths:
         - src
+    scanFiles:
+        - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+        - vendor/php-stubs/wp-cli-stubs/wp-cli-tools-stubs.php
     typeAliases:
         RouteRegistrar: 'Closure(Routepress\Types\HttpVerb|string|array<Routepress\Types\HttpVerb|string>, string, callable, bool, ?callable, list<callable>, array<string, array<string, mixed>>): void'

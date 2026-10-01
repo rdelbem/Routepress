@@ -8,15 +8,14 @@ use Brain\Monkey;
 use Brain\Monkey\Functions;
 use InvalidArgumentException;
 use LogicException;
+use Mockery;
 use PHPUnit\Framework\TestCase;
 use Routepress\AuthInterface;
 use Routepress\Bootload;
+use Routepress\Cli\RouteRegistry;
 use Routepress\JwtAuthenticator;
 use Routepress\Tests\Concerns\StubsRouteRegistration;
-use Routepress\Types\AuthHeader;
 use Routepress\Types\HttpVerb;
-use Routepress\Types\JWT;
-use Routepress\Types\RefreshToken;
 use WP_Error;
 use WP_REST_Request;
 use WP_User;
@@ -37,6 +36,22 @@ final class BootloadTest extends TestCase
     {
         Monkey\tearDown();
         parent::tearDown();
+    }
+
+    public function testRegisteredRoutesAreExposedToTheCliRegistry(): void
+    {
+        RouteRegistry::reset();
+        $bootload = $this->bootload();
+
+        $this->captureRegistration(
+            static fn () => $bootload->create('GET', '/items/:id', static fn (): bool => true, false)
+        );
+
+        $definitions = RouteRegistry::all();
+
+        self::assertCount(1, $definitions);
+        self::assertSame('/items/{id}', $definitions[0]->humanPath());
+        self::assertFalse($definitions[0]->requiresAuth);
     }
 
     public function testCreateRegistersAnOpenRouteOnRestApiInit(): void
@@ -327,25 +342,103 @@ final class BootloadTest extends TestCase
         self::assertTrue(is_subclass_of(AuthInterface::class, JwtAuthenticator::class));
     }
 
-    public function testAuthHeaderSerializesItsParts(): void
+    public function testMultipleRoutesRegisterOnASingleRestApiInitCallback(): void
     {
-        $header = new AuthHeader(
-            new JWT(1_700_000_000, 'routepress', 1_700_003_600, '7'),
-            new RefreshToken('refresh-token', 1_700_003_600)
+        $bootload = $this->bootload();
+        $registered = [];
+        $hooks = [];
+
+        Functions\expect('add_action')
+            ->once()
+            ->with('rest_api_init', Mockery::type('callable'))
+            ->andReturnUsing(static function (string $hook, callable $callback) use (&$hooks): bool {
+                $hooks[] = $callback;
+
+                return true;
+            });
+
+        Functions\expect('register_rest_route')
+            ->twice()
+            ->andReturnUsing(static function (string $namespace, string $route, array $args) use (&$registered): bool {
+                $registered[$route] = $args;
+
+                return true;
+            });
+
+        $bootload->create('GET', '/a', static fn (): bool => true, false);
+        $bootload->create('POST', '/b', static fn (): bool => true, false);
+
+        // Simulate WordPress firing `rest_api_init` once, after all routes exist.
+        foreach ($hooks as $hook) {
+            $hook();
+        }
+
+        self::assertCount(1, $hooks);
+        self::assertSame(['/a', '/b'], array_keys($registered));
+    }
+
+    public function testNonStringVerbEntriesAreRejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('HTTP verbs must be strings or HttpVerb cases.');
+
+        /** @var array<int, mixed> $verbs */
+        $verbs = ['GET', 123];
+
+        $this->bootload()->create($verbs, '/invalid', static fn (): bool => true, false);
+    }
+
+    public function testAuthenticationMiddlewareAndRoutePermissionRunInOrder(): void
+    {
+        $order = [];
+
+        $authenticator = $this->createMock(JwtAuthenticator::class);
+        $authenticator->expects(self::once())
+            ->method('validateJwt')
+            ->willReturnCallback(static function () use (&$order): bool {
+                $order[] = 'auth';
+
+                return true;
+            });
+
+        $group = (new Bootload($authenticator, self::NAMESPACE))
+            ->group('/admin')
+            ->middleware(static function () use (&$order): bool {
+                $order[] = 'middleware';
+
+                return true;
+            });
+
+        $routePermission = static function () use (&$order): bool {
+            $order[] = 'route';
+
+            return true;
+        };
+
+        $registration = $this->captureRegistration(
+            static fn () => $group->create('GET', '/stats', static fn (): bool => true, true, $routePermission)
         );
 
-        self::assertSame([
-            'jwt' => [
-                'iat' => 1_700_000_000,
-                'iss' => 'routepress',
-                'exp' => 1_700_003_600,
-                'uid' => '7',
-            ],
-            'refresh_token' => [
-                'refresh_token' => 'refresh-token',
-                'exp' => 1_700_003_600,
-            ],
-        ], $header->jsonSerialize());
+        ($registration['args']['permission_callback'])(new WP_REST_Request('GET', '/admin/stats'));
+
+        self::assertSame(['auth', 'middleware', 'route'], $order);
+    }
+
+    public function testSecurityCheckReturnsTrueWithoutSettingAUser(): void
+    {
+        $request = new WP_REST_Request('GET', '/whatever');
+
+        $authenticator = $this->createMock(JwtAuthenticator::class);
+        $authenticator->expects(self::once())
+            ->method('validateJwt')
+            ->with($request)
+            ->willReturn(true);
+
+        Functions\expect('wp_set_current_user')->never();
+
+        $bootload = new Bootload($authenticator, self::NAMESPACE);
+
+        self::assertTrue($bootload->securityCheck($request));
     }
 
     private function bootload(?JwtAuthenticator $authenticator = null): Bootload

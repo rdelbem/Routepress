@@ -23,6 +23,7 @@ Table of Contents
     -   [Route Parameters](#route-parameters)
     -   [Custom Permission Callback](#custom-permission-callback)
     -   [Route Groups and Middleware](#route-groups-and-middleware)
+-   [WP-CLI](#wp-cli)
 -   [Testing](#testing)
 -   [Contributing](#contributing)
 -   [License](#license)
@@ -292,6 +293,22 @@ then group middleware, then the route's own `$permissionCallback`. All must pass
 the first failure wins, and a `WP_Error` short-circuits as-is. Middleware must be
 added **before** the routes it should apply to.
 
+WP-CLI
+------
+
+When WP-CLI is available, `Bootload` registers a `wp routepress` command
+automatically. List every Routepress route, its verbs, authentication and
+arguments:
+
+```bash
+wp routepress routes
+wp routepress routes --format=json
+wp routepress routes --namespace=myplugin/v1
+```
+
+Output columns: `verb`, `route`, `auth` (`jwt`/`public`), `middleware`
+(`yes`/`no`) and `args`. Routes with several verbs produce one row per verb.
+
 Testing
 -------
 
@@ -305,6 +322,32 @@ functions, so no WordPress installation, database or Docker is required.
 composer install
 composer test
 ```
+
+### Test Coverage
+
+Coverage requires [PCOV](https://github.com/krakjoe/pcov) or Xdebug, and only
+measures `src/`:
+
+```bash
+composer coverage        # human-readable report
+composer coverage:check  # fail when below the minimums (100% lines/methods/classes)
+```
+
+### Mutation Testing
+
+[Mutation testing](https://infection.github.io/) checks that the tests actually
+assert behaviour, not just execute lines:
+
+```bash
+composer infection
+```
+
+It also requires PCOV or Xdebug. Note that `Bootload`, `RouteGroup` and
+`Middleware` are excluded in `infection.json5`: their tests use Brain Monkey
+(`antecedent/patchwork`), whose stream wrapper conflicts with Infection's
+include-interceptor, so every mutant in those classes escapes. They will be
+re-included once the tests can run without Patchwork. See
+[infection/infection#1827](https://github.com/infection/infection/issues/1827).
 
 ### Static Analysis with PHPStan
 
