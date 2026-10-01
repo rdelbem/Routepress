@@ -14,10 +14,24 @@ require __DIR__ . '/../vendor/autoload.php';
 if (!class_exists('WP_REST_Request')) {
     class WP_REST_Request
     {
+        /** @var array<string, string> */
+        private array $headers;
+
+        /** @var array<string, mixed> */
+        private array $params;
+
+        /**
+         * @param array<string, string> $headers
+         * @param array<string, mixed> $params
+         */
         public function __construct(
             private string $method = 'GET',
             private string $route = '',
+            array $headers = [],
+            array $params = [],
         ) {
+            $this->headers = $headers;
+            $this->params = $params;
         }
 
         public function get_method(): string
@@ -28,6 +42,22 @@ if (!class_exists('WP_REST_Request')) {
         public function get_route(): string
         {
             return $this->route;
+        }
+
+        public function get_header(string $name): ?string
+        {
+            foreach ($this->headers as $header => $value) {
+                if (strcasecmp($header, $name) === 0) {
+                    return $value;
+                }
+            }
+
+            return null;
+        }
+
+        public function get_param(string $name): mixed
+        {
+            return $this->params[$name] ?? null;
         }
     }
 }
@@ -54,6 +84,16 @@ if (!class_exists('WP_Error')) {
         public function get_error_code(): string
         {
             return $this->code;
+        }
+
+        public function get_error_message(): string
+        {
+            return $this->message;
+        }
+
+        public function get_error_data(): mixed
+        {
+            return $this->data;
         }
     }
 }

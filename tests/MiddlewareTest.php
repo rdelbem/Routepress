@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Routepress\Middleware;
 use WP_Error;
 use WP_REST_Request;
+use WP_User;
 
 final class MiddlewareTest extends TestCase
 {
@@ -178,5 +179,114 @@ final class MiddlewareTest extends TestCase
 
         self::assertFalse((Middleware::allCapabilities('a', 'b', 'c'))());
         self::assertSame(['a', 'b'], $checked);
+    }
+
+    public function testApiKeyAllowsAValidSecret(): void
+    {
+        $middleware = Middleware::apiKey('secret-123');
+        $request = new WP_REST_Request('POST', '/webhook', ['X-Api-Key' => 'secret-123']);
+
+        self::assertTrue($middleware($request));
+    }
+
+    public function testApiKeyAcceptsAnyOfSeveralSecrets(): void
+    {
+        $middleware = Middleware::apiKey(['first', 'second']);
+        $request = new WP_REST_Request('POST', '/webhook', ['X-Api-Key' => 'second']);
+
+        self::assertTrue($middleware($request));
+    }
+
+    public function testApiKeyIsCaseInsensitiveAboutTheHeaderName(): void
+    {
+        $middleware = Middleware::apiKey('secret');
+        $request = new WP_REST_Request('POST', '/webhook', ['x-api-key' => 'secret']);
+
+        self::assertTrue($middleware($request));
+    }
+
+    public function testApiKeyRejectsAnInvalidSecret(): void
+    {
+        $middleware = Middleware::apiKey('secret');
+        $result = $middleware(new WP_REST_Request('POST', '/webhook', ['X-Api-Key' => 'nope']));
+
+        self::assertInstanceOf(WP_Error::class, $result);
+        self::assertSame('routepress_invalid_api_key', $result->get_error_code());
+        self::assertSame(['status' => 403], $result->get_error_data());
+    }
+
+    public function testApiKeyRequiresAKey(): void
+    {
+        $middleware = Middleware::apiKey('secret');
+        $result = $middleware(new WP_REST_Request('POST', '/webhook'));
+
+        self::assertInstanceOf(WP_Error::class, $result);
+        self::assertSame('routepress_missing_api_key', $result->get_error_code());
+        self::assertSame(['status' => 401], $result->get_error_data());
+    }
+
+    public function testApiKeyFallsBackToTheQueryParameter(): void
+    {
+        $middleware = Middleware::apiKey('secret', 'X-Api-Key', 'api_key');
+        $request = new WP_REST_Request('GET', '/webhook', [], ['api_key' => 'secret']);
+
+        self::assertTrue($middleware($request));
+    }
+
+    public function testApiKeyStripsTheConfiguredPrefix(): void
+    {
+        $middleware = Middleware::apiKey('secret', 'Authorization', null, 'Bearer ');
+        $request = new WP_REST_Request('GET', '/webhook', ['Authorization' => 'Bearer secret']);
+
+        self::assertTrue($middleware($request));
+    }
+
+    public function testApiKeyUsingDelegatesToTheValidator(): void
+    {
+        $seen = null;
+        $middleware = Middleware::apiKeyUsing(static function (string $key) use (&$seen): bool {
+            $seen = $key;
+
+            return $key === 'ok';
+        });
+
+        self::assertTrue($middleware(new WP_REST_Request('GET', '/webhook', ['X-Api-Key' => 'ok'])));
+        self::assertSame('ok', $seen);
+    }
+
+    public function testApiKeyUsingRequiresAKey(): void
+    {
+        $called = false;
+        $middleware = Middleware::apiKeyUsing(static function () use (&$called): bool {
+            $called = true;
+
+            return true;
+        });
+
+        $result = $middleware(new WP_REST_Request('GET', '/webhook'));
+
+        self::assertInstanceOf(WP_Error::class, $result);
+        self::assertFalse($called);
+    }
+
+    public function testApiKeyUsingPropagatesAWpError(): void
+    {
+        $error = new WP_Error('expired', 'Expired');
+        $middleware = Middleware::apiKeyUsing(static fn (string $key): WP_Error => $error);
+
+        self::assertSame(
+            $error,
+            $middleware(new WP_REST_Request('GET', '/webhook', ['X-Api-Key' => 'ok']))
+        );
+    }
+
+    public function testApiKeyUsingSetsTheCurrentUserForAWpUser(): void
+    {
+        $user = new WP_User(9);
+        $middleware = Middleware::apiKeyUsing(static fn (string $key): WP_User => $user);
+
+        Functions\expect('wp_set_current_user')->once()->with(9);
+
+        self::assertTrue($middleware(new WP_REST_Request('GET', '/webhook', ['X-Api-Key' => 'ok'])));
     }
 }
