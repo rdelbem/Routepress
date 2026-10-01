@@ -1,0 +1,28 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    // Bootload, RouteGroup and Middleware are excluded because their tests use
+    // Brain Monkey (antecedent/patchwork). Patchwork's stream wrapper conflicts
+    // with Infection's include-interceptor, so every mutant in those classes
+    // escapes (0% MSI) and the score would be meaningless. See:
+    // https://github.com/infection/infection/issues/1827
+    "source": {
+        "directories": [
+            "src"
+        ],
+        "excludes": [
+            "Bootload.php",
+            "RouteGroup.php",
+            "Middleware.php"
+        ]
+    },
+    "logs": {
+        "text": "build/infection/infection.log",
+        "summary": "build/infection/summary.log"
+    },
+    "tmpDir": "build/infection/tmp",
+    "mutators": {
+        "@default": true
+    },
+    "minMsi": 95,
+    "minCoveredMsi": 95
+}

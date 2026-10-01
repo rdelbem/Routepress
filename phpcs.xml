@@ -8,6 +8,7 @@
 
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/tests/bootstrap.php</exclude-pattern>
+    <exclude-pattern>*/tests/Cli/fixtures/*</exclude-pattern>
 
     <arg name="colors"/>
     <arg value="sp"/>
