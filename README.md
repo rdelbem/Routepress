@@ -23,6 +23,7 @@ Table of Contents
     -   [Route Parameters](#route-parameters)
     -   [Custom Permission Callback](#custom-permission-callback)
     -   [Route Groups and Middleware](#route-groups-and-middleware)
+-   [API Keys](#api-keys)
 -   [WP-CLI](#wp-cli)
 -   [Testing](#testing)
 -   [Contributing](#contributing)
@@ -292,6 +293,63 @@ Checks run in this order: JWT authentication (when `$requiresAuth` is `true`),
 then group middleware, then the route's own `$permissionCallback`. All must pass;
 the first failure wins, and a `WP_Error` short-circuits as-is. Middleware must be
 added **before** the routes it should apply to.
+
+API Keys
+--------
+
+API keys are supported as middleware, so a route or group can be protected by a
+key instead of, or in addition to, JWT.
+
+### Validating incoming requests
+
+```php
+use Routepress\Middleware;
+
+// Constant-time comparison against one or more secrets.
+$route->group('/webhooks')->withoutAuth()->middleware(
+    Middleware::apiKey(['key-a', 'key-b'])
+);
+```
+
+The key is read from the `X-Api-Key` header by default, with an optional query
+fallback and an optional scheme prefix:
+
+```php
+$route->create(
+    'POST',
+    '/webhooks/stripe',
+    $handler,
+    false,
+    Middleware::apiKey('s3cr3t', 'Authorization', prefix: 'Bearer ')
+);
+```
+
+For custom lookup (database, per-tenant keys, HMAC, ...), use a validator. It
+receives the key and returns `true`, `false`, a `WP_Error`, or a `WP_User` (which
+becomes the current user so `Middleware::capability()` works):
+
+```php
+Middleware::apiKeyUsing(function (string $key): bool|\WP_Error {
+    if (tenant_for_key($key) === null) {
+        return new \WP_Error('invalid_api_key', 'Unknown key.', ['status' => 403]);
+    }
+
+    return true;
+});
+```
+
+A missing key answers `401`; an invalid secret answers `403`.
+
+### Authenticating outgoing requests
+
+```php
+use Routepress\ApiKey;
+
+$response = wp_remote_get($url, ApiKey::withHeaders(['timeout' => 5], $key));
+
+// Authorization: Bearer <token>
+$args = ApiKey::withHeaders([], $token, 'Authorization', 'Bearer ');
+```
 
 WP-CLI
 ------
